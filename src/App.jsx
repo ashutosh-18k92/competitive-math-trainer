@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import "./App.css";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 function rand(min, max) {
@@ -133,7 +134,7 @@ const TRICKS = [
     steps: ["Divide n by 4", "Multiply by 100 (append two zeros)"],
     examples: [
       { q: "48 × 25", step: "48÷4 = 12  →  1200", a: "1200" },
-      { q: "36 × 25", step: "36÷4 = 9   →  900", a: "900" },
+      { q: "36 × 25", step: "36÷4 = 9   →  900",  a: "900" },
       { q: "64 × 25", step: "64÷4 = 16  →  1600", a: "1600" },
     ],
     generate() {
@@ -144,60 +145,235 @@ const TRICKS = [
       return `${q.a} ÷ 4 = ${q.a / 4}  →  × 100  =  ${q.ans}`;
     },
   },
+  {
+    id: "sq1_25",
+    name: "Squares 1 – 25",
+    short: "n²",
+    accent: "#A78BFA",
+    tagline: "Singles recall · Teen expansion · Twenty expansion",
+    rule: "1–10: pure recall. 11–20: (10+a)² = 100 + 20a + a². 21–25: (20+a)² = 400 + 40a + a².",
+    steps: [
+      "For n ≤ 10 — recall directly (1, 4, 9, 16, 25, 36, 49, 64, 81, 100)",
+      "For 11–20 — write n = 10+a, then 100 + 20a + a²",
+      "For 21–25 — write n = 20+a, then 400 + 40a + a²",
+    ],
+    examples: [
+      { q: "13²", step: "10+3 → 100 + 60 + 9", a: "169" },
+      { q: "17²", step: "10+7 → 100 + 140 + 49", a: "289" },
+      { q: "23²", step: "20+3 → 400 + 120 + 9", a: "529" },
+    ],
+    generate() {
+      const n = rand(1, 25);
+      return { expr: `${n}²`, a: n, b: n, ans: n * n, trickId: this.id };
+    },
+    getHint(q) {
+      const n = q.a;
+      if (n <= 10) {
+        return `${n} × ${n}  =  ${q.ans}  (recall)`;
+      } else if (n <= 20) {
+        const a = n - 10;
+        return `(10+${a})² = 100 + ${20 * a} + ${a * a}  =  ${q.ans}`;
+      } else {
+        const a = n - 20;
+        return `(20+${a})² = 400 + ${40 * a} + ${a * a}  =  ${q.ans}`;
+      }
+    },
+  },
+  {
+    id: "cube1_15",
+    name: "Cubes 1 – 15",
+    short: "n³",
+    accent: "#34D399",
+    tagline: "Recall to 10 · Expand beyond",
+    rule: "1–10: recall n³ directly. 11–15: use (10+a)³ = 1000 + 300a + 30a² + a³ and add up.",
+    steps: [
+      "For n ≤ 10 — recall: 1, 8, 27, 64, 125, 216, 343, 512, 729, 1000",
+      "For 11–15 — write n = 10+a",
+      "Compute 1000 + 300a + 30a² + a³ and sum the parts",
+    ],
+    examples: [
+      { q: "12³", step: "1000 + 600 + 120 + 8", a: "1728" },
+      { q: "13³", step: "1000 + 900 + 270 + 27", a: "2197" },
+      { q: "15³", step: "1000 + 1500 + 750 + 125", a: "3375" },
+    ],
+    generate() {
+      const n = rand(1, 15);
+      return { expr: `${n}³`, a: n, b: n, ans: n * n * n, trickId: this.id };
+    },
+    getHint(q) {
+      const n = q.a;
+      if (n <= 10) {
+        return `${n}³  =  ${q.ans}  (recall)`;
+      }
+      const a = n - 10;
+      const t1 = 1000, t2 = 300 * a, t3 = 30 * a * a, t4 = a * a * a;
+      return `(10+${a})³ = ${t1} + ${t2} + ${t3} + ${t4}  =  ${q.ans}`;
+    },
+  },
+  {
+    id: "addRound",
+    name: "Round & Add",
+    short: "A+B",
+    accent: "#22D3EE",
+    tagline: "Round up · Add · Pull back",
+    rule: "Round the second number up to the nearest 10, add it, then subtract the overshoot. Eliminates carrying in your head.",
+    steps: [
+      "Find how much to round B up to the next multiple of 10 (overshoot d = roundUp(B) − B)",
+      "Add the rounded number to A  →  A + roundUp(B)",
+      "Subtract the overshoot  →  result − d",
+    ],
+    examples: [
+      { q: "47 + 38", step: "round 38→40 (+2) → 47+40=87 → 87−2", a: "85" },
+      { q: "56 + 27", step: "round 27→30 (+3) → 56+30=86 → 86−3", a: "83" },
+      { q: "73 + 49", step: "round 49→50 (+1) → 73+50=123 → 123−1", a: "122" },
+    ],
+    generate() {
+      const a = rand(11, 79);
+      // Pick b so that it does NOT already end in 0 (trick would be trivial)
+      let b;
+      do { b = rand(11, 99 - a); } while (b % 10 === 0);
+      return { expr: `${a} + ${b}`, a, b, ans: a + b, trickId: this.id };
+    },
+    getHint(q) {
+      const rounded = Math.ceil(q.b / 10) * 10;
+      const d = rounded - q.b;
+      return `round ${q.b}→${rounded} (+${d})  →  ${q.a}+${rounded}=${q.a + rounded}  →  ${q.a + rounded}−${d}  =  ${q.ans}`;
+    },
+  },
+  {
+    id: "subCount",
+    name: "Count-Up Subtract",
+    short: "A−B",
+    accent: "#FB7185",
+    tagline: "Jump to 10s · Bridge · Sum gaps",
+    rule: "Instead of subtracting, count UP from B to A in two jumps: first to the next multiple of 10, then the rest of the way. Add the two gaps.",
+    steps: [
+      "From B, count up to the next multiple of 10  →  gap₁",
+      "From that multiple of 10, count up to A  →  gap₂",
+      "Answer = gap₁ + gap₂",
+    ],
+    examples: [
+      { q: "83 − 47", step: "47→50 = 3, 50→83 = 33  →  3+33", a: "36" },
+      { q: "72 − 35", step: "35→40 = 5, 40→72 = 32  →  5+32", a: "37" },
+      { q: "91 − 64", step: "64→70 = 6, 70→91 = 21  →  6+21", a: "27" },
+    ],
+    generate() {
+      const b = rand(11, 88);
+      const a = rand(b + 2, Math.min(b + 60, 99));
+      // Ensure b is not a multiple of 10 (first jump would be trivial)
+      if (b % 10 === 0) return TRICKS.find(t => t.id === "subCount").generate();
+      return { expr: `${a} − ${b}`, a, b, ans: a - b, trickId: this.id };
+    },
+    getHint(q) {
+      const nextTen = Math.ceil(q.b / 10) * 10;
+      const gap1 = nextTen - q.b;
+      const gap2 = q.a - nextTen;
+      if (gap2 === 0) {
+        // b lands exactly on a multiple of 10
+        return `${q.b}→${nextTen} = ${gap1}  →  answer = ${gap1}  =  ${q.ans}`;
+      }
+      return `${q.b}→${nextTen} = ${gap1},  ${nextTen}→${q.a} = ${gap2}  →  ${gap1}+${gap2}  =  ${q.ans}`;
+    },
+  },
+  {
+    id: "teenTables",
+    name: "Teen Tables 12–19",
+    short: "12…19",
+    accent: "#F59E0B",
+    tagline: "Multiply · Divide by teen · Divide by digit",
+    rule: "For (10+a)×b: split as 10b + a×b. Reverse: to divide a product by its teen factor, recall which single digit fits; to divide by the digit, recall which teen fits.",
+    steps: [
+      "Multiply: (10+a) × b  =  10b + a×b  →  add the two parts",
+      "Divide by teen: product ÷ (10+a) → ask 'which digit × (10+a) = product?'",
+      "Divide by digit: product ÷ digit → ask 'which teen × digit = product?'",
+    ],
+    examples: [
+      { q: "17 × 8",    step: "10×8=80, 7×8=56  →  80+56",  a: "136" },
+      { q: "136 ÷ 17",  step: "17×? = 136  →  17×8=136",    a: "8"   },
+      { q: "136 ÷ 8",   step: "?×8 = 136  →  17×8=136",     a: "17"  },
+    ],
+    generate() {
+      const teen  = rand(12, 19);          // e.g. 17
+      const digit = rand(2, 9);            // e.g. 8
+      const product = teen * digit;        // e.g. 136
+      const mode = rand(1, 3);
+      // mode 1 → multiply, mode 2 → ÷ teen, mode 3 → ÷ digit
+      if (mode === 1) {
+        return {
+          expr: `${teen} × ${digit}`,
+          a: teen, b: digit, ans: product,
+          meta: { teen, digit, product, mode: 1 },
+          trickId: this.id,
+        };
+      } else if (mode === 2) {
+        return {
+          expr: `${product} ÷ ${teen}`,
+          a: product, b: teen, ans: digit,
+          meta: { teen, digit, product, mode: 2 },
+          trickId: this.id,
+        };
+      } else {
+        return {
+          expr: `${product} ÷ ${digit}`,
+          a: product, b: digit, ans: teen,
+          meta: { teen, digit, product, mode: 3 },
+          trickId: this.id,
+        };
+      }
+    },
+    getHint(q) {
+      const { teen, digit, product, mode } = q.meta;
+      const a = teen - 10;   // e.g. 7 for teen=17
+      if (mode === 1) {
+        return `(10+${a})×${digit} = 10×${digit} + ${a}×${digit}  =  ${10*digit} + ${a*digit}  =  ${q.ans}`;
+      } else if (mode === 2) {
+        return `${teen} × ? = ${product}  →  10×${digit}=10×${digit}, +${a}×${digit}=${a*digit}  →  digit = ${q.ans}`;
+      } else {
+        return `? × ${digit} = ${product}  →  ${product}÷${digit} = ${teen}  →  check: (10+${a})×${digit}=${10*digit}+${a*digit}=${product}  →  teen = ${q.ans}`;
+      }
+    },
+  },
 ];
 
 const TOTAL_Q = 10;
 
-/* ─── Keyframe injection ──────────────────────────────────────────────────── */
-const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #080812; }
-  @keyframes fadeUp   { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:none } }
-  @keyframes pulse    { 0%,100% { transform:scale(1) } 50% { transform:scale(1.04) } }
-  @keyframes shake    { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
-  @keyframes pop      { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 100%{transform:scale(1)} }
-  @keyframes slideIn  { from{opacity:0;transform:translateX(-14px)} to{opacity:1;transform:none} }
-  @keyframes glow     { 0%,100%{box-shadow:0 0 0 0 rgba(247,183,49,0)} 50%{box-shadow:0 0 20px 4px rgba(247,183,49,0.18)} }
-  ::selection { background: rgba(247,183,49,0.3); }
-  input[type=number]::-webkit-inner-spin-button,
-  input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
-  input[type=number] { -moz-appearance: textfield; }
-  ::-webkit-scrollbar { width:6px } ::-webkit-scrollbar-track { background:#0E0E1A } ::-webkit-scrollbar-thumb { background:#2A2A42; border-radius:3px }
-`;
-
 /* ─── Tiny components ─────────────────────────────────────────────────────── */
 function Badge({ color, children }) {
   return (
-    <span style={{
-      display: "inline-block", padding: "2px 10px", borderRadius: 99,
-      background: color + "20", border: `1px solid ${color}55`,
-      color, fontSize: 11, fontFamily: "'Outfit',sans-serif",
-      fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase"
-    }}>{children}</span>
+    <span
+      className="badge"
+      style={{
+        background: color + "20",
+        border: `1px solid ${color}55`,
+        color,
+      }}
+    >
+      {children}
+    </span>
   );
 }
 
 function Dot({ filled, accent }) {
   return (
-    <span style={{
-      width: 8, height: 8, borderRadius: "50%",
-      background: filled ? accent : "#1E1E38",
-      border: `1.5px solid ${filled ? accent : "#2A2A44"}`,
-      display: "inline-block", transition: "all 0.3s",
-      boxShadow: filled ? `0 0 6px ${accent}99` : "none"
-    }} />
+    <span
+      className="dot"
+      style={{
+        background: filled ? accent : "#1E1E38",
+        border: `1.5px solid ${filled ? accent : "#2A2A44"}`,
+        boxShadow: filled ? `0 0 6px ${accent}99` : "none",
+      }}
+    />
   );
 }
 
 /* ─── Main App ────────────────────────────────────────────────────────────── */
 export default function App() {
-  const [screen, setScreen] = useState("home");       // home | learn | practice | summary
-  const [learnTrick, setLearnTrick] = useState(null); // trick obj shown in learn
+  const [screen, setScreen] = useState("home");        // home | learn | practice | summary
+  const [learnTrick, setLearnTrick] = useState(null);  // trick obj shown in learn
   const [activeTrick, setActiveTrick] = useState(null); // id | "all"
   const [q, setQ] = useState(null);
   const [ans, setAns] = useState("");
-  const [feedback, setFeedback] = useState(null);     // null | "correct" | "wrong"
+  const [feedback, setFeedback] = useState(null);      // null | "correct" | "wrong"
   const [showHint, setShowHint] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
   const [score, setScore] = useState(0);
@@ -227,10 +403,10 @@ export default function App() {
     setTimeout(() => inputRef.current?.focus(), 300);
   };
 
-  const submit = () => {
-    if (!ans.trim() || feedback) return;
+  const submit = (currentAns = ans) => {
+    if (!currentAns.trim() || feedback) return;
     const secs = (Date.now() - t0) / 1000;
-    const correct = parseInt(ans) === q.ans;
+    const correct = parseInt(currentAns) === q.ans;
     setFeedback(correct ? "correct" : "wrong");
 
     const newStreak = correct ? streak + 1 : 0;
@@ -262,82 +438,58 @@ export default function App() {
 
   /* ── Home ─────────────────────────────────────────────────────────────── */
   if (screen === "home") return (
-    <div style={{ minHeight: "100vh", background: "#080812", color: "#E8E4DB", padding: "48px 24px 80px", fontFamily: "'Outfit',sans-serif" }}>
-      <style>{CSS}</style>
+    <div className="screen home">
 
       {/* Header */}
-      <div style={{ maxWidth: 720, margin: "0 auto", animation: "fadeUp 0.6s ease both" }}>
-        <div style={{ marginBottom: 8 }}>
+      <div className="home__header">
+        <div className="home__badge-wrap">
           <Badge color="#F7B731">UPSC Prelims · Mental Math</Badge>
         </div>
-        <h1 style={{
-          fontFamily: "'Fraunces',serif", fontSize: "clamp(36px,6vw,58px)",
-          fontWeight: 900, lineHeight: 1.1, marginBottom: 12,
-          background: "linear-gradient(135deg,#F7B731,#FB923C)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-        }}>
+        <h1 className="home__title">
           Two-Digit<br />Speed Trainer
         </h1>
-        <p style={{ color: "#7A7690", fontSize: 17, maxWidth: 480, lineHeight: 1.6 }}>
+        <p className="home__subtitle">
           Master proven mental math shortcuts. Each trick turns a hard problem into a 3-second calculation.
         </p>
       </div>
 
       {/* Trick Grid */}
-      <div style={{ maxWidth: 720, margin: "40px auto 0" }}>
-        <p style={{ color: "#4A4760", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600, marginBottom: 16 }}>
-          Choose a technique
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 14 }}>
+      <div className="home__grid-wrap">
+        <p className="home__grid-label">Choose a technique</p>
+        <div className="home__grid">
           {TRICKS.map((trick, i) => (
-            <div key={trick.id}
+            <div
+              key={trick.id}
+              className="trick-card"
               onClick={() => { setLearnTrick(trick); setScreen("learn"); }}
-              style={{
-                background: "#0D0D1C", border: `1px solid #1C1C30`,
-                borderRadius: 14, padding: "20px 20px 18px", cursor: "pointer",
-                animation: `fadeUp 0.5s ${0.07 * i}s ease both`,
-                transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
-              }}
+              style={{ animation: `fadeUp 0.5s ${0.07 * i}s ease both` }}
               onMouseEnter={e => {
-                e.currentTarget.style.transform = "translateY(-3px)";
                 e.currentTarget.style.borderColor = trick.accent + "66";
                 e.currentTarget.style.boxShadow = `0 8px 32px ${trick.accent}18`;
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.transform = "";
-                e.currentTarget.style.borderColor = "#1C1C30";
+                e.currentTarget.style.borderColor = "";
                 e.currentTarget.style.boxShadow = "";
               }}
             >
-              <div style={{
-                fontFamily: "'DM Mono',monospace", fontSize: 22, fontWeight: 500,
-                color: trick.accent, marginBottom: 10, letterSpacing: "-0.5px"
-              }}>{trick.short}</div>
-              <div style={{ fontWeight: 600, fontSize: 15, color: "#DDD8CF", marginBottom: 6 }}>{trick.name}</div>
-              <div style={{ fontSize: 12, color: "#5A5570", lineHeight: 1.5 }}>{trick.tagline}</div>
+              <div className="trick-card__short" style={{ color: trick.accent }}>{trick.short}</div>
+              <div className="trick-card__name">{trick.name}</div>
+              <div className="trick-card__tagline">{trick.tagline}</div>
             </div>
           ))}
 
           {/* All Tricks card */}
           <div
+            className="all-tricks-card"
             onClick={() => startSession("all")}
-            style={{
-              background: "linear-gradient(135deg,#13111F,#0F1020)",
-              border: "1px solid #2A2840",
-              borderRadius: 14, padding: "20px 20px 18px", cursor: "pointer",
-              gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 18,
-              animation: `fadeUp 0.5s 0.5s ease both`,
-              transition: "transform 0.2s, box-shadow 0.2s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(247,183,49,0.12)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+            style={{ animation: `fadeUp 0.5s 0.5s ease both` }}
           >
-            <div style={{ fontSize: 32, lineHeight: 1 }}>⚡</div>
+            <div className="all-tricks-card__icon">⚡</div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: "#F7B731", marginBottom: 4 }}>Mixed Practice — All Tricks</div>
-              <div style={{ fontSize: 13, color: "#5A5570" }}>Random questions from every category · 10 questions per session</div>
+              <div className="all-tricks-card__title">Mixed Practice — All Tricks</div>
+              <div className="all-tricks-card__desc">Random questions from every category · 10 questions per session</div>
             </div>
-            <div style={{ marginLeft: "auto", color: "#3A3754", fontSize: 22 }}>→</div>
+            <div className="all-tricks-card__arrow">→</div>
           </div>
         </div>
       </div>
@@ -348,86 +500,75 @@ export default function App() {
   if (screen === "learn" && learnTrick) {
     const t = learnTrick;
     return (
-      <div style={{ minHeight: "100vh", background: "#080812", color: "#E8E4DB", padding: "40px 24px 80px", fontFamily: "'Outfit',sans-serif" }}>
-        <style>{CSS}</style>
-        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+      <div className="screen learn">
+        <div className="learn__inner">
 
-          <button onClick={() => setScreen("home")} style={{
-            background: "none", border: "none", color: "#4A4760", cursor: "pointer",
-            fontSize: 14, marginBottom: 28, display: "flex", alignItems: "center", gap: 8, padding: 0
-          }}>← Back</button>
+          <button className="learn__back-btn" onClick={() => setScreen("home")}>← Back</button>
 
           <Badge color={t.accent}>{t.short}</Badge>
-          <h2 style={{
-            fontFamily: "'Fraunces',serif", fontSize: 38, fontWeight: 900,
-            color: "#E8E4DB", margin: "12px 0 6px", lineHeight: 1.15
-          }}>{t.name}</h2>
-          <p style={{ color: "#6B6880", fontSize: 15, marginBottom: 32 }}>{t.tagline}</p>
+          <h2 className="learn__title">{t.name}</h2>
+          <p className="learn__tagline">{t.tagline}</p>
 
           {/* Rule box */}
-          <div style={{
-            background: t.accent + "0D", border: `1px solid ${t.accent}33`,
-            borderRadius: 12, padding: "20px 24px", marginBottom: 24,
-            borderLeft: `3px solid ${t.accent}`
-          }}>
-            <div style={{ color: t.accent, fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>The Rule</div>
-            <p style={{ color: "#CCC8BF", fontSize: 15, lineHeight: 1.6 }}>{t.rule}</p>
+          <div
+            className="learn__rule-box"
+            style={{
+              background: t.accent + "0D",
+              border: `1px solid ${t.accent}33`,
+              borderLeft: `3px solid ${t.accent}`,
+            }}
+          >
+            <div className="learn__rule-label" style={{ color: t.accent }}>The Rule</div>
+            <p className="learn__rule-text">{t.rule}</p>
           </div>
 
           {/* Steps */}
-          <div style={{ marginBottom: 28 }}>
+          <div className="learn__steps">
             {t.steps.map((step, i) => (
-              <div key={i} style={{
-                display: "flex", gap: 14, alignItems: "flex-start",
-                padding: "10px 0", borderBottom: "1px solid #131326",
-                animation: `slideIn 0.4s ${0.1 * i + 0.2}s both`
-              }}>
-                <span style={{
-                  minWidth: 24, height: 24, borderRadius: "50%",
-                  background: t.accent + "20", color: t.accent,
-                  fontFamily: "'DM Mono',monospace", fontSize: 12,
-                  display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 500
-                }}>{i + 1}</span>
-                <span style={{ color: "#AAA5A0", fontSize: 15, lineHeight: 1.5 }}>{step}</span>
+              <div
+                key={i}
+                className="learn__step"
+                style={{ animation: `slideIn 0.4s ${0.1 * i + 0.2}s both` }}
+              >
+                <span
+                  className="learn__step-num"
+                  style={{ background: t.accent + "20", color: t.accent }}
+                >
+                  {i + 1}
+                </span>
+                <span className="learn__step-text">{step}</span>
               </div>
             ))}
           </div>
 
           {/* Examples */}
-          <div style={{ marginBottom: 36 }}>
-            <p style={{ color: "#3A3754", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>Worked Examples</p>
+          <div className="learn__examples">
+            <p className="learn__examples-label">Worked Examples</p>
             {t.examples.map((ex, i) => (
-              <div key={i} style={{
-                background: "#0D0D1C", border: "1px solid #1A1A30",
-                borderRadius: 10, padding: "14px 18px", marginBottom: 10,
-                display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16,
-                animation: `fadeUp 0.4s ${0.1 * i + 0.3}s both`
-              }}>
+              <div
+                key={i}
+                className="learn__example-item"
+                style={{ animation: `fadeUp 0.4s ${0.1 * i + 0.3}s both` }}
+              >
                 <div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 16, color: "#E8E4DB", marginBottom: 4 }}>{ex.q}</div>
-                  <div style={{ fontSize: 13, color: "#5A5570" }}>{ex.step}</div>
+                  <div className="learn__example-expr">{ex.q}</div>
+                  <div className="learn__example-step">{ex.step}</div>
                 </div>
-                <div style={{
-                  fontFamily: "'DM Mono',monospace", fontSize: 20, fontWeight: 500,
-                  color: t.accent, background: t.accent + "15",
-                  padding: "6px 14px", borderRadius: 8
-                }}>{ex.a}</div>
+                <div
+                  className="learn__example-answer"
+                  style={{ color: t.accent, background: t.accent + "15" }}
+                >
+                  {ex.a}
+                </div>
               </div>
             ))}
           </div>
 
           {/* CTA */}
           <button
+            className="learn__cta-btn"
             onClick={() => startSession(t.id)}
-            style={{
-              width: "100%", padding: "16px 24px", borderRadius: 12, border: "none",
-              background: t.accent, color: "#08080F",
-              fontFamily: "'Outfit',sans-serif", fontSize: 16, fontWeight: 700,
-              cursor: "pointer", letterSpacing: "0.03em",
-              transition: "transform 0.15s, opacity 0.15s"
-            }}
-            onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
-            onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+            style={{ background: t.accent, color: "#08080F" }}
           >
             Start Practice — {TOTAL_Q} Questions →
           </button>
@@ -443,144 +584,113 @@ export default function App() {
     const isCorrect = feedback === "correct";
     const isWrong = feedback === "wrong";
 
+    const questionModifier = isWrong
+      ? "practice__question--wrong"
+      : isCorrect
+        ? "practice__question--correct"
+        : "practice__question--default";
+
+    const exprColor = isCorrect ? "#4ADE80" : isWrong ? "#F87171" : "#E8E4DB";
+    const inputBorderColor = feedback === "correct" ? "#4ADE80" : feedback === "wrong" ? "#F87171" : "#1E1E38";
+
     return (
-      <div style={{
-        minHeight: "100vh", background: "#080812", color: "#E8E4DB",
-        display: "flex", flexDirection: "column", fontFamily: "'Outfit',sans-serif"
-      }}>
-        <style>{CSS}</style>
+      <div className="screen practice">
 
         {/* Top bar */}
-        <div style={{
-          padding: "20px 24px 16px", borderBottom: "1px solid #111122",
-          display: "flex", justifyContent: "space-between", alignItems: "center"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button onClick={() => setScreen("home")} style={{
-              background: "none", border: "none", color: "#3A3754",
-              cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0
-            }}>×</button>
+        <div className="practice__topbar">
+          <div className="practice__topbar-left">
+            <button className="practice__close-btn" onClick={() => setScreen("home")}>×</button>
             <Badge color={acc}>{tObj?.name || "Mixed"}</Badge>
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div className="practice__dots">
             {Array.from({ length: TOTAL_Q }, (_, i) => (
               <Dot key={i} filled={i <= qNum} accent={acc} />
             ))}
           </div>
-          <div style={{
-            fontFamily: "'DM Mono',monospace", fontSize: 14,
-            color: acc, background: acc + "18", padding: "5px 12px", borderRadius: 8
-          }}>
+          <div
+            className="practice__score-badge"
+            style={{ color: acc, background: acc + "18" }}
+          >
             {score} pts
           </div>
         </div>
 
         {/* Main area */}
-        <div style={{
-          flex: 1, display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", padding: "24px"
-        }}>
+        <div className="practice__main">
 
           {/* Q counter + streak */}
-          <div style={{ display: "flex", gap: 16, marginBottom: 32, alignItems: "center" }}>
-            <span style={{ color: "#3A3754", fontSize: 14 }}>Q {qNum + 1} / {TOTAL_Q}</span>
+          <div className="practice__meta">
+            <span className="practice__q-counter">Q {qNum + 1} / {TOTAL_Q}</span>
             {streak >= 2 && (
-              <span style={{
-                color: acc, fontSize: 13, fontWeight: 600,
-                animation: "pulse 1s infinite"
-              }}>🔥 {streak} streak</span>
+              <span className="practice__streak" style={{ color: acc }}>
+                🔥 {streak} streak
+              </span>
             )}
           </div>
 
           {/* Question display */}
-          <div style={{
-            textAlign: "center", marginBottom: 48,
-            animation: isWrong ? "shake 0.5s ease" : isCorrect ? "pop 0.4s ease" : "fadeUp 0.4s ease",
-          }}>
-            <div style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: "clamp(40px,10vw,72px)",
-              fontWeight: 500, letterSpacing: "-2px",
-              color: isCorrect ? "#4ADE80" : isWrong ? "#F87171" : "#E8E4DB",
-              transition: "color 0.2s",
-              lineHeight: 1.1
-            }}>
+          <div className={`practice__question ${questionModifier}`}>
+            <div className="practice__expr" style={{ color: exprColor }}>
               {q.expr}
             </div>
-            <div style={{ color: "#2A2742", fontSize: 15, marginTop: 10 }}>= ?</div>
+            <div className="practice__equals">= ?</div>
           </div>
 
           {/* Input */}
-          <div style={{ position: "relative", marginBottom: 20 }}>
+          <div className="practice__input-wrap">
             <input
               ref={inputRef}
               type="number"
               value={ans}
-              onChange={e => !feedback && setAns(e.target.value)}
+              onChange={e => {
+                if (feedback) return;
+                const val = e.target.value;
+                setAns(val);
+                if (val.trim() && parseInt(val) === q.ans) submit(val);
+              }}
               onKeyDown={e => e.key === "Enter" && submit()}
               placeholder="Your answer"
               disabled={!!feedback}
-              style={{
-                width: 240, padding: "18px 24px", borderRadius: 14,
-                border: `2px solid ${feedback === "correct" ? "#4ADE80" : feedback === "wrong" ? "#F87171" : "#1E1E38"}`,
-                background: "#0D0D1C",
-                fontFamily: "'DM Mono',monospace", fontSize: 24,
-                color: "#E8E4DB", textAlign: "center", outline: "none",
-                transition: "border-color 0.25s",
-              }}
+              className="practice__input"
+              style={{ border: `2px solid ${inputBorderColor}` }}
             />
           </div>
 
           {/* Feedback line */}
           {feedback && (
-            <div style={{
-              marginBottom: 20, fontSize: 15, fontWeight: 600, textAlign: "center",
-              color: isCorrect ? "#4ADE80" : "#F87171",
-              animation: "fadeUp 0.3s ease"
-            }}>
+            <div
+              className="practice__feedback"
+              style={{ color: isCorrect ? "#4ADE80" : "#F87171" }}
+            >
               {isCorrect ? "✓ Correct!" : `✗ The answer was ${q.ans}`}
-              {isCorrect && !hintUsed && <span style={{ color: "#F7B731", marginLeft: 8 }}>+3 no-hint bonus</span>}
+              {isCorrect && !hintUsed && (
+                <span className="practice__no-hint-bonus">+3 no-hint bonus</span>
+              )}
             </div>
           )}
 
-          {/* Submit / Hint */}
+          {/* Hint */}
           {!feedback && (
-            <div style={{ display: "flex", gap: 10 }}>
+            <div className="practice__actions">
               <button
-                onClick={submit}
-                disabled={!ans.trim()}
-                style={{
-                  padding: "12px 32px", borderRadius: 10, border: "none",
-                  background: ans.trim() ? acc : "#1A1A2E",
-                  color: ans.trim() ? "#080812" : "#3A3754",
-                  fontWeight: 700, fontSize: 15, cursor: ans.trim() ? "pointer" : "default",
-                  transition: "all 0.2s", fontFamily: "'Outfit',sans-serif"
-                }}
-              >Submit</button>
-              <button
+                className="practice__hint-btn"
                 onClick={() => { setShowHint(true); setHintUsed(true); }}
-                style={{
-                  padding: "12px 20px", borderRadius: 10,
-                  border: "1px solid #1E1E38", background: "none",
-                  color: "#4A4760", fontSize: 14, cursor: "pointer",
-                  fontFamily: "'Outfit',sans-serif", transition: "border-color 0.2s"
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = "#3A3754"}
-                onMouseLeave={e => e.currentTarget.style.borderColor = "#1E1E38"}
-              >💡 Hint</button>
+              >
+                💡 Hint
+              </button>
             </div>
           )}
 
           {/* Hint box */}
           {showHint && tObj && (
-            <div style={{
-              marginTop: 28, maxWidth: 440, padding: "14px 20px",
-              background: acc + "0C", border: `1px solid ${acc}33`,
-              borderRadius: 10, fontFamily: "'DM Mono',monospace",
-              fontSize: 14, color: "#B8B4AC", lineHeight: 1.7,
-              animation: "fadeUp 0.3s ease"
-            }}>
-              <span style={{ color: acc, fontWeight: 500 }}>Trick: </span>
+            <div
+              className="practice__hint-box"
+              style={{
+                background: acc + "0C",
+                border: `1px solid ${acc}33`,
+              }}
+            >
+              <span className="practice__hint-label" style={{ color: acc }}>Trick: </span>
               {tObj.getHint(q)}
             </div>
           )}
@@ -599,86 +709,88 @@ export default function App() {
     const gradeColor = { S: "#F7B731", A: "#4ADE80", B: "#38BDF8", C: "#FB923C", D: "#F87171" }[grade];
 
     return (
-      <div style={{ minHeight: "100vh", background: "#080812", color: "#E8E4DB", padding: "48px 24px 80px", fontFamily: "'Outfit',sans-serif" }}>
-        <style>{CSS}</style>
-        <div style={{ maxWidth: 600, margin: "0 auto" }}>
+      <div className="screen summary">
+        <div className="summary__inner">
 
-          <div style={{ textAlign: "center", marginBottom: 48, animation: "fadeUp 0.5s ease" }}>
-            <div style={{
-              width: 80, height: 80, borderRadius: "50%",
-              background: gradeColor + "18", border: `2px solid ${gradeColor}55`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 20px",
-              fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, color: gradeColor
-            }}>{grade}</div>
-            <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 36, fontWeight: 900, marginBottom: 8 }}>Session Complete</h2>
-            <p style={{ color: "#5A5570", fontSize: 16 }}>
-              {pct >= 75 ? "Strong performance! Keep it up." : pct >= 50 ? "Good effort — practice makes perfect." : "Keep drilling — speed will come."}
+          <div className="summary__header">
+            <div
+              className="summary__grade-badge"
+              style={{
+                background: gradeColor + "18",
+                border: `2px solid ${gradeColor}55`,
+                color: gradeColor,
+              }}
+            >
+              {grade}
+            </div>
+            <h2 className="summary__title">Session Complete</h2>
+            <p className="summary__subtitle">
+              {pct >= 75
+                ? "Strong performance! Keep it up."
+                : pct >= 50
+                  ? "Good effort — practice makes perfect."
+                  : "Keep drilling — speed will come."}
             </p>
           </div>
 
           {/* Stat cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 28 }}>
+          <div className="summary__stats">
             {[
-              { label: "Score", val: `${score}`, sub: `/ ${maxPossible} possible`, color: "#F7B731" },
-              { label: "Correct", val: `${correct}/${TOTAL_Q}`, sub: `${Math.round(correct/TOTAL_Q*100)}% accuracy`, color: "#4ADE80" },
-              { label: "Best Streak", val: `${best}`, sub: "consecutive correct", color: "#C084FC" },
-              { label: "Avg Time", val: `${avgTime.toFixed(1)}s`, sub: "per question", color: "#38BDF8" },
+              { label: "Score",       val: `${score}`,               sub: `/ ${maxPossible} possible`,          color: "#F7B731" },
+              { label: "Correct",     val: `${correct}/${TOTAL_Q}`,  sub: `${Math.round(correct/TOTAL_Q*100)}% accuracy`, color: "#4ADE80" },
+              { label: "Best Streak", val: `${best}`,                sub: "consecutive correct",                color: "#C084FC" },
+              { label: "Avg Time",    val: `${avgTime.toFixed(1)}s`, sub: "per question",                      color: "#38BDF8" },
             ].map((s, i) => (
-              <div key={i} style={{
-                background: "#0D0D1C", border: "1px solid #1A1A30", borderRadius: 12,
-                padding: "18px 20px", animation: `fadeUp 0.4s ${0.1*i+0.2}s both`
-              }}>
-                <div style={{ color: "#4A4760", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>{s.label}</div>
-                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 28, fontWeight: 500, color: s.color }}>{s.val}</div>
-                <div style={{ fontSize: 12, color: "#3A3754", marginTop: 4 }}>{s.sub}</div>
+              <div
+                key={i}
+                className="summary__stat-card"
+                style={{ animation: `fadeUp 0.4s ${0.1 * i + 0.2}s both` }}
+              >
+                <div className="summary__stat-label">{s.label}</div>
+                <div className="summary__stat-value" style={{ color: s.color }}>{s.val}</div>
+                <div className="summary__stat-sub">{s.sub}</div>
               </div>
             ))}
           </div>
 
           {/* Per-question breakdown */}
-          <div style={{ marginBottom: 36 }}>
-            <p style={{ color: "#3A3754", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>Question Breakdown</p>
+          <div className="summary__breakdown">
+            <p className="summary__breakdown-label">Question Breakdown</p>
             {results.map((r, i) => {
               const t = getTrick(r.q.trickId);
               return (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", gap: 12, padding: "10px 0",
-                  borderBottom: "1px solid #0E0E1C",
-                  animation: `slideIn 0.35s ${0.05*i+0.3}s both`
-                }}>
-                  <span style={{ color: r.correct ? "#4ADE80" : "#F87171", fontSize: 16 }}>{r.correct ? "✓" : "✗"}</span>
-                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 14, color: "#AAA5A0", flex: 1 }}>{r.q.expr}</span>
-                  <span style={{ fontSize: 13, color: "#3A3754" }}>{t?.name}</span>
-                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#4A4760" }}>{r.secs.toFixed(1)}s</span>
-                  {r.hintUsed && <span style={{ fontSize: 11, color: "#4A4760" }}>hint</span>}
-                  <span style={{
-                    fontFamily: "'DM Mono',monospace", fontSize: 13,
-                    color: r.pts > 0 ? "#F7B731" : "#3A3754"
-                  }}>+{r.pts}</span>
+                <div
+                  key={i}
+                  className="summary__breakdown-row"
+                  style={{ animation: `slideIn 0.35s ${0.05 * i + 0.3}s both` }}
+                >
+                  <span
+                    className="summary__breakdown-icon"
+                    style={{ color: r.correct ? "#4ADE80" : "#F87171" }}
+                  >
+                    {r.correct ? "✓" : "✗"}
+                  </span>
+                  <span className="summary__breakdown-expr">{r.q.expr}</span>
+                  <span className="summary__breakdown-trick">{t?.name}</span>
+                  <span className="summary__breakdown-time">{r.secs.toFixed(1)}s</span>
+                  {r.hintUsed && <span className="summary__breakdown-hint">hint</span>}
+                  <span
+                    className="summary__breakdown-pts"
+                    style={{ color: r.pts > 0 ? "#F7B731" : "#3A3754" }}
+                  >
+                    +{r.pts}
+                  </span>
                 </div>
               );
             })}
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 12 }}>
-            <button
-              onClick={() => startSession(activeTrick)}
-              style={{
-                flex: 1, padding: "14px", borderRadius: 12, border: "none",
-                background: "#F7B731", color: "#080812",
-                fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: "'Outfit',sans-serif"
-              }}>
+          <div className="summary__actions">
+            <button className="summary__retry-btn" onClick={() => startSession(activeTrick)}>
               Try Again ↺
             </button>
-            <button
-              onClick={() => setScreen("home")}
-              style={{
-                flex: 1, padding: "14px", borderRadius: 12,
-                border: "1px solid #1E1E38", background: "none",
-                color: "#7A7690", fontSize: 15, cursor: "pointer", fontFamily: "'Outfit',sans-serif"
-              }}>
+            <button className="summary__home-btn" onClick={() => setScreen("home")}>
               Choose Trick
             </button>
           </div>

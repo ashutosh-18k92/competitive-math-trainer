@@ -1,3 +1,106 @@
+/* ─── Fonts ──────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap');
+
+/* ─── Design Tokens ───────────────────────────────────────────────────────── */
+:root {
+  /* Fonts */
+  --font-display: 'Fraunces', serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'Outfit', sans-serif;
+
+  /* Brand / accent palette */
+  --color-gold: #F7B731;
+  --color-orange: #FB923C;
+  --color-sky: #38BDF8;
+  --color-green: #4ADE80;
+  --color-pink: #F472B6;
+  --color-purple: #C084FC;
+
+  /* Semantic feedback */
+  --color-correct: var(--color-green);
+  --color-wrong: #F87171;
+
+  /* Background layers */
+  --bg-base: #080812;
+  --bg-surface: #0D0D1C;
+  --bg-raised: #13111F;
+  --bg-raised-alt: #0F1020;
+
+  /* Border / separator colours */
+  --border-subtle: #1C1C30;
+  --border-muted: #1A1A30;
+  --border-faint: #131326;
+  --border-dim: #111122;
+  --border-deep: #0E0E1C;
+  --border-card: #2A2840;
+  --border-input: #1E1E38;
+  --border-divider: #1E1E38;
+
+  /* Text colours */
+  --text-primary: #E8E4DB;
+  --text-secondary: #CCC8BF;
+  --text-muted: #AAA5A0;
+  --text-dim: #7A7690;
+  --text-faint: #6B6880;
+  --text-faintest: #5A5570;
+  --text-disabled: #4A4760;
+  --text-ghost: #3A3754;
+  --text-deep: #2A2742;
+  --text-card-name: #DDD8CF;
+  --text-hint-body: #B8B4AC;
+
+  /* Scrollbar */
+  --scrollbar-width: 6px;
+  --scrollbar-track-bg: #0E0E1A;
+  --scrollbar-thumb-bg: #2A2A42;
+  --scrollbar-thumb-r: 3px;
+
+  /* Selection highlight */
+  --selection-bg: rgba(247, 183, 49, 0.3);
+
+  /* Glow animation colours */
+  --glow-color-transparent: rgba(247, 183, 49, 0);
+  --glow-color-visible: rgba(247, 183, 49, 0.18);
+
+  /* Layout */
+  --max-width-home: 720px;
+  --max-width-learn: 640px;
+  --max-width-summary: 600px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-20: 80px;
+
+  /* Border-radius scale */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-pill: 99px;
+  --radius-full: 50%;
+
+  /* Transition speeds */
+  --transition-fast: 0.15s;
+  --transition-base: 0.2s;
+  --transition-slow: 0.25s;
+  --transition-border: border-color var(--transition-base);
+
+  /* Summary retry button */
+  --retry-btn-bg: var(--color-gold);
+  --retry-btn-color: var(--bg-base);
+}
+
+/* ─── Existing base styles ────────────────────────────────────────────────── */
 :root {
   --text: #6b6375;
   --text-h: #08060d;
