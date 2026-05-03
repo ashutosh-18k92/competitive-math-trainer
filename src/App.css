@@ -548,6 +548,11 @@ input[type="number"] {
   /* color changes based on feedback state — set inline */
 }
 
+.practice__expr--sm {
+  font-size: clamp(20px, 4.5vw, 34px);
+  letter-spacing: -0.5px;
+}
+
 .practice__equals {
   color: var(--text-deep);
   font-size: 15px;
@@ -573,6 +578,69 @@ input[type="number"] {
   transition: border-color var(--transition-slow);
   /* border color set inline based on feedback */
 }
+
+/* Yes / No buttons (divisibility trick) */
+.practice__yesno-btns {
+  display: flex;
+  gap: 16px;
+  margin-bottom: var(--space-5);
+  animation: fadeUp 0.35s ease;
+}
+
+.practice__yesno-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px 24px;
+  border-radius: var(--radius-xl);
+  border: 2px solid;
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: transform 0.15s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  min-width: 120px;
+}
+
+.practice__yesno-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.practice__yesno-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.practice__yesno-btn--disabled {
+  cursor: default;
+}
+
+.practice__yesno-btn__icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.practice__yesno-btn--yes .practice__yesno-btn__icon {
+  color: #4ADE80;
+}
+
+.practice__yesno-btn--no .practice__yesno-btn__icon {
+  color: #F87171;
+}
+
+.practice__yesno-btn--yes {
+  color: #4ADE80;
+}
+
+.practice__yesno-btn--no {
+  color: #F87171;
+}
+
+
 
 /* Feedback */
 .practice__feedback {

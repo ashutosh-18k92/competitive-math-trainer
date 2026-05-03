@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./App.css";
+import AdditionGame from "./AdditionGame.jsx";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 function rand(min, max) {
@@ -333,6 +334,132 @@ const TRICKS = [
       }
     },
   },
+  {
+    id: "divisibility",
+    type: "yesno",
+    name: "Divisibility Rules",
+    short: "Div",
+    accent: "#E879F9",
+    tagline: "Last digit · Digit sum · 1000-split",
+    rule: "Quick checks: by 2/5 (last digit); by 3/9 (digit sum); by 4 (last 2 digits); by 8 (last 3 digits); by 6 (div by 2 AND 3); by 12 (div by 3 AND 4); by 11 (alternating digit sum ≡ 0 mod 11); by 7/11/13 (thousands-split difference).",
+    steps: [
+      "Div by 2 or 5 → check only the last digit",
+      "Div by 3 or 9 → sum all digits; check if sum is div by 3 or 9",
+      "Div by 4 → check if last 2 digits form a number div by 4",
+      "Div by 8 → check if last 3 digits are div by 8",
+      "Div by 6 → must pass BOTH the ÷2 and ÷3 tests",
+      "Div by 11 → (sum of odd-position digits) − (sum of even-position digits) = 0 or multiple of 11",
+      "Div by 7, 11 or 13 → split number: thousands part minus last 3 digits; result divisible?",
+    ],
+    examples: [
+      { q: "Is 348 divisible by 4?",    step: "Last 2 digits: 48 ÷ 4 = 12 ✓",          a: "1 (Yes)" },
+      { q: "Is 5831 divisible by 11?",  step: "(5+3) − (8+1) = 8−9 = −1 ✗",           a: "0 (No)" },
+      { q: "Is 473312 divisible by 7?", step: "473 − 312 = 161 = 7×23 ✓",              a: "1 (Yes)" },
+    ],
+    // ── internal helpers ──────────────────────────────────────
+    _digitSum(n) {
+      return String(Math.abs(n)).split("").reduce((s, d) => s + +d, 0);
+    },
+    _altSum(n) {
+      // alternating sum for div-by-11: odd positions minus even positions (1-indexed from right)
+      const digits = String(Math.abs(n)).split("").reverse();
+      return digits.reduce((s, d, i) => s + (i % 2 === 0 ? +d : -+d), 0);
+    },
+    // divisors we support and their labels
+    _RULES: [
+      { d: 2,  label: "2" },
+      { d: 3,  label: "3" },
+      { d: 4,  label: "4" },
+      { d: 5,  label: "5" },
+      { d: 6,  label: "6" },
+      { d: 8,  label: "8" },
+      { d: 9,  label: "9" },
+      { d: 11, label: "11" },
+      { d: 12, label: "12" },
+      { d: 7,  label: "7" },
+      { d: 13, label: "13" },
+    ],
+    generate() {
+      const rule = this._RULES[rand(0, this._RULES.length - 1)];
+      const d = rule.d;
+      // Build a 3-to-6 digit number — ~50 % chance of being divisible
+      const wantDiv = rand(0, 1) === 1;
+      let n;
+      if (d <= 13 && d !== 6 && d !== 12) {
+        // Generate a random number then nudge it
+        const base = rand(100, 999999);
+        const rem = base % d;
+        if (wantDiv) {
+          n = rem === 0 ? base : base + (d - rem);
+        } else {
+          // pick a non-zero remainder
+          const shift = (rem === 0) ? 1 : 0;
+          n = base + shift;
+          if (n % d === 0) n += 1;
+        }
+      } else {
+        // composite divisors — just try random numbers
+        let attempts = 0;
+        do {
+          n = rand(100, 999999);
+          attempts++;
+        } while ((n % d === 0) !== wantDiv && attempts < 200);
+      }
+      const isDivisible = n % d === 0 ? 1 : 0;
+      return {
+        expr: `Is ${n} divisible by ${d}?`,
+        a: n, b: d,
+        ans: isDivisible,
+        meta: { n, d, isDivisible },
+        trickId: this.id,
+      };
+    },
+    getHint(q) {
+      const { n, d } = q.meta;
+      const digitSum = this._digitSum(n);
+      const last1 = n % 10;
+      const last2 = n % 100;
+      const last3 = n % 1000;
+      const altSum = this._altSum(n);
+      const thousands = Math.floor(n / 1000);
+      const rem1000 = n % 1000;
+      const diff = thousands - rem1000;
+
+      const verdict = q.ans === 1 ? "✓ YES" : "✗ NO";
+
+      if (d === 2)
+        return `Last digit = ${last1}. ${last1 % 2 === 0 ? `${last1} is even` : `${last1} is odd`}  →  ${verdict}`;
+      if (d === 5)
+        return `Last digit = ${last1}. ${last1 === 0 || last1 === 5 ? "Ends in 0 or 5" : "Does NOT end in 0 or 5"}  →  ${verdict}`;
+      if (d === 3)
+        return `Digit sum = ${digitSum}. ${digitSum} ÷ 3 = ${digitSum / 3}${digitSum % 3 === 0 ? " ✓" : ` (rem ${digitSum % 3})`}  →  ${verdict}`;
+      if (d === 9)
+        return `Digit sum = ${digitSum}. ${digitSum} ÷ 9 = ${(digitSum / 9).toFixed(2)}${digitSum % 9 === 0 ? " ✓" : " ✗"}  →  ${verdict}`;
+      if (d === 4)
+        return `Last 2 digits = ${last2}. ${last2} ÷ 4 = ${last2 / 4}${last2 % 4 === 0 ? " ✓" : ` (rem ${last2 % 4})`}  →  ${verdict}`;
+      if (d === 8)
+        return `Last 3 digits = ${last3}. ${last3} ÷ 8 = ${last3 / 8}${last3 % 8 === 0 ? " ✓" : ` (rem ${last3 % 8})`}  →  ${verdict}`;
+      if (d === 6) {
+        const by2 = n % 2 === 0 ? "even ✓" : "odd ✗";
+        return `Div by 2? Last digit ${last1} is ${by2}. Div by 3? Digit sum ${digitSum} ÷ 3 ${digitSum % 3 === 0 ? "✓" : "✗"}  →  ${verdict}`;
+      }
+      if (d === 12) {
+        const by3 = digitSum % 3 === 0 ? "✓" : "✗";
+        const by4 = last2 % 4 === 0 ? "✓" : "✗";
+        return `Div by 3? Digit sum ${digitSum} ÷ 3 ${by3}. Div by 4? Last 2 digits ${last2} ÷ 4 ${by4}  →  ${verdict}`;
+      }
+      if (d === 11) {
+        const digits = String(n).split("");
+        const oddSum = digits.filter((_, i) => i % 2 === 0).reduce((s, d) => s + +d, 0);
+        const evenSum = digits.filter((_, i) => i % 2 !== 0).reduce((s, d) => s + +d, 0);
+        return `Alternating sum: (${digits.filter((_, i) => i % 2 === 0).join("+")}) − (${digits.filter((_, i) => i % 2 !== 0).join("+")}) = ${oddSum}−${evenSum} = ${oddSum - evenSum}${Math.abs(oddSum - evenSum) % 11 === 0 ? " ✓" : " ✗"}  →  ${verdict}`;
+      }
+      if (d === 7 || d === 13) {
+        return `Split: ${thousands} | ${rem1000}  →  ${thousands} − ${rem1000} = ${diff}. ${Math.abs(diff) % d === 0 ? `${diff} is divisible by ${d} ✓` : `${diff} is NOT divisible by ${d} ✗`}  →  ${verdict}`;
+      }
+      return verdict;
+    },
+  },
 ];
 
 const TOTAL_Q = 10;
@@ -436,6 +563,11 @@ export default function App() {
 
   const accent = currentTrickObj?.accent || "#F7B731";
 
+  /* ── Addition Circle module ───────────────────────────────────────────── */
+  if (screen === "addition") return (
+    <AdditionGame onBack={() => setScreen("home")} />
+  );
+
   /* ── Home ─────────────────────────────────────────────────────────────── */
   if (screen === "home") return (
     <div className="screen home">
@@ -478,11 +610,25 @@ export default function App() {
             </div>
           ))}
 
+          {/* Addition Circle module card */}
+          <div
+            className="all-tricks-card all-tricks-card--addition"
+            onClick={() => setScreen("addition")}
+            style={{ animation: `fadeUp 0.5s 0.5s ease both` }}
+          >
+            <div className="all-tricks-card__icon">⊕</div>
+            <div>
+              <div className="all-tricks-card__title" style={{ color: "#38BDF8" }}>Addition Circle</div>
+              <div className="all-tricks-card__desc">8 numbers · sum consecutive pairs · race the clock</div>
+            </div>
+            <div className="all-tricks-card__arrow">→</div>
+          </div>
+
           {/* All Tricks card */}
           <div
             className="all-tricks-card"
             onClick={() => startSession("all")}
-            style={{ animation: `fadeUp 0.5s 0.5s ease both` }}
+            style={{ animation: `fadeUp 0.5s 0.57s ease both` }}
           >
             <div className="all-tricks-card__icon">⚡</div>
             <div>
@@ -630,31 +776,60 @@ export default function App() {
 
           {/* Question display */}
           <div className={`practice__question ${questionModifier}`}>
-            <div className="practice__expr" style={{ color: exprColor }}>
+            <div className={`practice__expr${tObj?.type === "yesno" ? " practice__expr--sm" : ""}`} style={{ color: exprColor }}>
               {q.expr}
             </div>
-            <div className="practice__equals">= ?</div>
+            <div className="practice__equals">{tObj?.type === "yesno" ? "Is it divisible?" : "= ?"}</div>
           </div>
 
           {/* Input */}
-          <div className="practice__input-wrap">
-            <input
-              ref={inputRef}
-              type="number"
-              value={ans}
-              onChange={e => {
-                if (feedback) return;
-                const val = e.target.value;
-                setAns(val);
-                if (val.trim() && parseInt(val) === q.ans) submit(val);
-              }}
-              onKeyDown={e => e.key === "Enter" && submit()}
-              placeholder="Your answer"
-              disabled={!!feedback}
-              className="practice__input"
-              style={{ border: `2px solid ${inputBorderColor}` }}
-            />
-          </div>
+          {tObj?.type === "yesno" ? (
+            <div className="practice__yesno-btns">
+              <button
+                className={`practice__yesno-btn practice__yesno-btn--yes${feedback ? " practice__yesno-btn--disabled" : ""}`}
+                disabled={!!feedback}
+                onClick={() => { setAns("1"); submit("1"); }}
+                style={{
+                  borderColor: feedback ? (q.ans === 1 ? "#4ADE80" : ans === "1" ? "#F87171" : acc + "33") : acc + "55",
+                  background:  feedback ? (q.ans === 1 ? "#4ADE8018" : ans === "1" ? "#F8717118" : "transparent") : "transparent",
+                }}
+              >
+                <span className="practice__yesno-btn__icon">✓</span>
+                Yes
+              </button>
+              <button
+                className={`practice__yesno-btn practice__yesno-btn--no${feedback ? " practice__yesno-btn--disabled" : ""}`}
+                disabled={!!feedback}
+                onClick={() => { setAns("0"); submit("0"); }}
+                style={{
+                  borderColor: feedback ? (q.ans === 0 ? "#4ADE80" : ans === "0" ? "#F87171" : "#55556644") : "#55556688",
+                  background:  feedback ? (q.ans === 0 ? "#4ADE8018" : ans === "0" ? "#F8717118" : "transparent") : "transparent",
+                }}
+              >
+                <span className="practice__yesno-btn__icon">✗</span>
+                No
+              </button>
+            </div>
+          ) : (
+            <div className="practice__input-wrap">
+              <input
+                ref={inputRef}
+                type="number"
+                value={ans}
+                onChange={e => {
+                  if (feedback) return;
+                  const val = e.target.value;
+                  setAns(val);
+                  if (val.trim() && parseInt(val) === q.ans) submit(val);
+                }}
+                onKeyDown={e => e.key === "Enter" && submit()}
+                placeholder="Your answer"
+                disabled={!!feedback}
+                className="practice__input"
+                style={{ border: `2px solid ${inputBorderColor}` }}
+              />
+            </div>
+          )}
 
           {/* Feedback line */}
           {feedback && (
@@ -662,7 +837,7 @@ export default function App() {
               className="practice__feedback"
               style={{ color: isCorrect ? "#4ADE80" : "#F87171" }}
             >
-              {isCorrect ? "✓ Correct!" : `✗ The answer was ${q.ans}`}
+              {isCorrect ? "✓ Correct!" : `✗ The answer was ${tObj?.type === "yesno" ? (q.ans === 1 ? "Yes" : "No") : q.ans}`}
               {isCorrect && !hintUsed && (
                 <span className="practice__no-hint-bonus">+3 no-hint bonus</span>
               )}
